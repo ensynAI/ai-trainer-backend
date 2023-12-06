@@ -2,16 +2,12 @@ import uvicorn
 
 from fastapi import FastAPI
 from routers import message
-from config import settings
-
-# from schemas import Message
-# from data_types import Role, ResponseFinishReason
+from config import app_settings
 
 
 def get_app():
     app = FastAPI()
     app.include_router(message.router)
-
     return app
 
 app = get_app()
@@ -23,4 +19,4 @@ def root() -> dict[str, str]:
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host=settings.HOST, port=settings.PORT)
+    uvicorn.run(app, host=app_settings.HOST, port=app_settings.PORT)
