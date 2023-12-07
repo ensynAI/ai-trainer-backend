@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "ai-trainer-backend"
+name = "app"
 version = "0.1.0"
 description = ""
 authors = ["JakubTomaszewski <jakub.k.tomaszewski@gmail.com>"]
