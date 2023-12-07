@@ -1,24 +1,17 @@
 from fastapi import APIRouter
 from schemas import Message
-
-from config import app_settings
-from services.text_generation import model_settings, ModelServiceFactory
-
+from services.chatbot import chatbot_client
 
 router = APIRouter(
     prefix="/message",
     tags=["message"]
 )
 
-model_service_client = ModelServiceFactory.get_model_service(app_settings.MODEL_SERVICE,
-                                                             **model_settings[app_settings.MODEL_SERVICE].model_dump()
-                                                             )
-
 
 @router.post("/generate")
 def generate_message(messages: list[Message]) -> dict[str, Message]:
-    response = model_service_client.send_request(messages)
-    new_message = model_service_client.process_response(response)
+    response = chatbot_client.send_request(messages)
+    new_message = chatbot_client.process_response(response)
 
     return {"message": new_message}
 

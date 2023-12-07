@@ -18,27 +18,6 @@ class BaseModelService(ABC):
         pass
 
 
-class ModelServiceFactory:
-    """Model Service Factory class"""
-    @staticmethod
-    def get_model_service(model_service: ModelService, **kwargs) -> BaseModelService:
-        """Function creating a corresponding model service given a model service name.
-
-        Args:
-            model_service (ModelService): name of the model service
-
-        Raises:
-            ValueError: raised when an unsupported model service name is provided.
-
-        Returns:
-            BaseModelService: _description_
-        """
-        if model_service == ModelService.OPENAI:
-            return ModelServiceOpenAI(**kwargs)
-        else:
-            raise ValueError("Unsupported model service.")
-
-
 class ModelServiceOpenAI(BaseModelService):
     """OpenAI Model Service class"""
     def __init__(self, **kwargs) -> None:
@@ -110,3 +89,24 @@ class ModelServiceOpenAI(BaseModelService):
 
     def _handle_tool_calls_response(self):
         raise HTTPException(status_code=400, detail="Request caused the model to use an external tool (function).")
+
+
+class ModelServiceFactory:
+    """Model Service Factory class"""
+    @staticmethod
+    def get_model_service(model_service: ModelService, **kwargs) -> BaseModelService:
+        """Function creating a corresponding model service given a model service name.
+
+        Args:
+            model_service (ModelService): name of the model service
+
+        Raises:
+            ValueError: raised when an unsupported model service name is provided.
+
+        Returns:
+            BaseModelService: _description_
+        """
+        if model_service == ModelService.OPENAI:
+            return ModelServiceOpenAI(**kwargs)
+        else:
+            raise ValueError("Unsupported model service.")
