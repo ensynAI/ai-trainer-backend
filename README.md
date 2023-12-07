@@ -29,7 +29,7 @@ export PATH="$HOME/.local/bin:$PATH"
 
 ## Configure environment
 
-Cd into the directory containing the `pyproject.toml` file and run the following command
+Enter the directory containing the `pyproject.toml` file and install all the dependencies using the following command
 
 ```shell
 $ poetry install
@@ -45,12 +45,18 @@ OPENAI_API_KEY="your-api-key"
 
 ## Running the app
 
-There are 2 ways to run the app:
+There are 2 ways to run the app. First go to the [app](app) directory and run one of the below commands:
 
 1. Automatic. Using the prepared script
 
 ```shell
-$ sh run.sh
+$ poetry run launch_app
+```
+
+or
+
+```shell
+$ poetry run python main.py
 ```
 
 2. Manual

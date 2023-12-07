@@ -15,6 +15,9 @@ openai = "^1.3.7"
 pydantic-settings = "^2.1.0"
 
 
+[tool.poetry.scripts]
+launch_app = "app.main:launch_app"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

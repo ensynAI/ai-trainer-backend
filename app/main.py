@@ -18,5 +18,12 @@ def root() -> dict[str, str]:
     return {"message": "Hello World!"}
 
 
+def launch_app():
+    """Lanches the app"""
+    uvicorn.run("main:app", 
+                host=app_settings.HOST, 
+                port=app_settings.PORT, 
+                reload=app_settings.RELOAD)
+
 if __name__ == "__main__":
-    uvicorn.run(app, host=app_settings.HOST, port=app_settings.PORT)
+    launch_app()
