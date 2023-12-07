@@ -21,6 +21,12 @@
 
 The project requirements are build using [poetry](https://python-poetry.org/docs/#installation). Install it configure the environment.
 
+Also add poetry to path using:
+
+```shell
+export PATH="$HOME/.local/bin:$PATH"
+```
+
 ## Configure environment
 
 Cd into the directory containing the `pyproject.toml` file and run the following command
