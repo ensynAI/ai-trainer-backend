@@ -1,1 +1,1 @@
-from .model_service import ModelServiceFactory
+from .service import ModelServiceFactory

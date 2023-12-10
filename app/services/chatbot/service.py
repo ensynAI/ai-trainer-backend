@@ -1,6 +1,6 @@
-from config import app_settings
 from services.ai_model import ModelServiceFactory
 
+from config import app_settings
 from .model_config import model_settings
 
 
