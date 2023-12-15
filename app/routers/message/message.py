@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from schemas import Message
 from services.chatbot import chatbot_client
+from services.feedback_generation import feedback_client
 
 router = APIRouter(
     prefix="/message",
@@ -10,7 +11,7 @@ router = APIRouter(
 
 @router.post("/generate")
 def generate_message(messages: list[Message]) -> dict[str, Message]:
-    new_message = chatbot_client.generate_response_message(messages)
+    new_message = chatbot_client.generate_response(messages)
     return {"message": new_message}
 
 
@@ -32,7 +33,14 @@ def initialize_conversation() -> dict[str, list[Message]]:
     return {"messages": messages}
 
 
-# @route.post("/feedback")
-# def generate_feedback(messages: list[Message] = []) -> dict[str, Message]:
-#     feedback_message = None
-#     return {"feedback_message": feedback_message}
+@router.post("/feedback")
+def generate_feedback(messages: list[Message]) -> dict[str, Message]:
+    # TODO:
+    # system_message_content = db.get_system_prompt(user_login)
+
+    system_message = "Give only short answers, max 400 signs. You are responsible for evaluating messages of a customer service agent in terms of empathy they show. Provide a user with short instructions on how he could improve the message to be more polite, kind and empathetic. Return an example. Furthermore, give a score from 0 to 10, assessing the politeness and empathy of a message sent by the user, where 0 is super impolite, and 10 is perfectly polite. Return the score in the format of: {'SCORE': VALUE}."
+
+    feedback_message = feedback_client.generate_feedback(messages,
+                                                         system_message)
+    
+    return {"feedback_message": feedback_message}

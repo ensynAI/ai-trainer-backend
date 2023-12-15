@@ -3,7 +3,7 @@ from openai import OpenAI
 from fastapi import HTTPException, Response
 
 from schemas import Message, BaseModelService
-from data_types import Model, ResponseFinishReason
+from data_types import Model, ResponseFinishReason, Role
 from .message_builder import MessageBuilderOpenAI
 
 
@@ -11,6 +11,7 @@ class ModelServiceOpenAI(BaseModelService):
     """OpenAI Model Service class"""
     def __init__(self, **kwargs) -> None:
         self.model: Model = kwargs["MODEL"]
+        self.feedback_history_length: int = kwargs["FEEDBACK_HISTORY_LENGTH"] if "FEEDBACK_HISTORY_LENGTH" in kwargs else 2
         self.client = OpenAI()
         self.message_builder = MessageBuilderOpenAI()
 
@@ -23,7 +24,7 @@ class ModelServiceOpenAI(BaseModelService):
 
         Args:
             initial_message (str): assistant's (model's) initial message
-            system_message (str, optional): initial system message. Defaults to None.
+            system_message (str, optional): initial system message content. Defaults to None.
 
         Returns:
             list[Message]: list of messages containing the initial model's message and the system message (if provided)
@@ -38,7 +39,7 @@ class ModelServiceOpenAI(BaseModelService):
 
         return messages
 
-    def generate_response_message(self, messages: list[Message]) -> Message:
+    def generate_response(self, messages: list[Message]) -> Message:
         """Generates a response message based on the conversation history.
 
         Args:
@@ -51,6 +52,28 @@ class ModelServiceOpenAI(BaseModelService):
         content = self.process_response(response)
         message = self.message_builder.get_assistant_message(content)
         return message
+
+    def generate_feedback(self, messages: list[Message], system_message: str = None) -> Message:
+        """Generates a feedback message based on the conversation history.
+
+        Args:
+            messages (list[Message]): conversation containing all the history messages
+            system_message (str, optional): initiali system message content. Defaults to None.
+
+        Returns:
+            Message: generated feedback message
+        """
+        messages = self._process_feedback_input_messages(messages)
+
+        if system_message is not None:
+            system_message = self.message_builder.get_system_message(system_message)
+            messages = [system_message, *messages[-self.feedback_history_length:]]
+        else:
+            messages = [*messages[-self.feedback_history_length:]]
+
+        message = self.generate_response(messages)
+        return message
+    
 
     def send_request(self, messages: list[Message]) -> Response:
         """Sends a request to the OpenAI API
@@ -119,3 +142,20 @@ class ModelServiceOpenAI(BaseModelService):
     def _handle_tool_calls_response(self):
         raise HTTPException(status_code=400, detail="Request caused the model to use an external tool (function).")
 
+    def _process_feedback_input_messages(self, messages: list[Message]) -> list[Message]:
+        # TODO: Refactor
+        if len(messages) >= self.feedback_history_length:
+            messages = messages[-self.feedback_history_length:]
+        else:
+            raise HTTPException(status_code=400, detail="Feedback messages must contain at least two messages.")
+
+        for i, message in enumerate(reversed(messages)):
+            if message.content is None or len(message.content) == 0:
+                raise HTTPException(status_code=400, detail="Feedback messages cannot contain empty messages.")
+            if message.role == Role.SYSTEM:
+                raise HTTPException(status_code=400, detail="Incorrect conversation history. System messages not allowed.")
+            if i % 2 == 0 and message.role != Role.USER:
+                raise HTTPException(status_code=400, detail="Incorrect conversation history. User messages must be at even indexes.")
+            elif i % 2 != 0 and message.role != Role.ASSISTANT:
+                raise HTTPException(status_code=400, detail="Incorrect conversation history. Assistant messages must be at odd indexes.")
+        return messages
