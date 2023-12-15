@@ -6,6 +6,7 @@ class AppSettings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: int = 8000
     CHATBOT_SERVICE: ModelService = ModelService.OPENAI
+    FEEDBACK_SERVICE: ModelService = ModelService.OPENAI
 
     RELOAD: bool = True
 
