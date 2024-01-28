@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from schemas import Message
+from schemas import Message, Conversation
 from services.chatbot import chatbot_client
 from services.feedback_generation import feedback_client
 
@@ -53,14 +53,14 @@ def initialize_conversation() -> dict[str, Message]:
 
 
 @router.post("/generate")
-def generate_message(messages: list[Message]) -> dict[str, Message]:
+def generate_message(messages: Conversation) -> dict[str, Message]:
     system_message = customer_system_message
     new_message = chatbot_client.generate_response(messages, system_message)
     return {"message": new_message}
 
 
 @router.post("/feedback")
-def generate_feedback(messages: list[Message]) -> dict[str, Message]:
+def generate_feedback(messages: Conversation) -> dict[str, Message]:
     # TODO:
     # system_message_content = db.get_system_prompt(user_login)
 

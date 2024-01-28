@@ -2,7 +2,7 @@
 from openai import OpenAI
 from fastapi import HTTPException, Response
 
-from schemas import Message, BaseModelService
+from schemas import Message, Conversation, BaseModelService
 from data_types import Model, ResponseFinishReason, Role
 from .message_builder import MessageBuilderOpenAI
 
@@ -31,13 +31,13 @@ class ModelServiceOpenAI(BaseModelService):
         return message
 
     def generate_response(self, 
-                          messages: list[Message],
+                          conversation: Conversation,
                           system_message: str = None
                           ) -> Message:
         """Generates a response message based on the conversation history.
 
         Args:
-            messages (list[Message]): conversation containing all the history messages
+            conversation (Conversation): conversation containing all the history messages
             system_message (str, optional): initiali system message content. Defaults to None.
 
         Returns:
@@ -45,45 +45,42 @@ class ModelServiceOpenAI(BaseModelService):
         """
         if system_message is not None:
             system_message = self.message_builder.get_system_message(system_message)
-            messages.insert(0, system_message)
+            conversation.messages.insert(0, system_message)
 
-        response = self.send_request(messages)
+        response = self.send_request(conversation)
         content = self.process_response(response)
         message = self.message_builder.get_assistant_message(content)
         return message
 
-    def generate_feedback(self, messages: list[Message], system_message: str = None) -> Message:
+    def generate_feedback(self, conversation: Conversation, system_message: str = None) -> Message:
         """Generates a feedback message based on the conversation history.
 
         Args:
-            messages (list[Message]): conversation containing all the history messages
+            conversaion (Conversation): conversation containing all the history messages
             system_message (str, optional): initiali system message content. Defaults to None.
 
         Returns:
             Message: generated feedback message
         """
-        messages = self._process_feedback_input_messages(messages)
+        processed_messages = self._process_feedback_input_messages(conversation.messages)
+        processed_conversation = Conversation(messages=processed_messages)
 
-        if system_message is not None:
-            system_message = self.message_builder.get_system_message(system_message)
-            messages.insert(0, system_message)
-
-        feedback_message = self.generate_response(messages)
+        feedback_message = self.generate_response(processed_conversation, system_message)
         return feedback_message
     
 
-    def send_request(self, messages: list[Message]) -> Response:
+    def send_request(self, conversation: Conversation) -> Response:
         """Sends a request to the OpenAI API
 
         Args:
-            messages (list[Message]): conversation containing all the history messages
+            conversation (Conversation): conversation containing all the history messages
 
         Returns:
             Response: model service response with the generated message
         """
         response = self.client.chat.completions.create(
             model=self.model,
-            messages=messages,
+            messages=conversation.messages,
         )
         return response
 
