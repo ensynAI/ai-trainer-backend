@@ -17,37 +17,36 @@ class ModelServiceOpenAI(BaseModelService):
 
     def initialize_conversation(self, 
                                 initial_message: str,
-                                system_message: str = None
-                                ) -> list[Message]:
+                                ) -> Message:
         """Initializes a conversation with the model.
-        Returns a list of messages containing the initial model's message and the system message (if provided).
+        Returns the initial conversation message.
 
         Args:
             initial_message (str): assistant's (model's) initial message
-            system_message (str, optional): initial system message content. Defaults to None.
 
         Returns:
-            list[Message]: list of messages containing the initial model's message and the system message (if provided)
+            Message: initial conversation message
         """
-        assistant_message = self.message_builder.get_assistant_message(initial_message)
+        message = self.message_builder.get_assistant_message(initial_message)
+        return message
 
-        if system_message is not None:
-            system_message = self.message_builder.get_system_message(system_message)
-            messages = [system_message, assistant_message]
-        else:
-            messages = [assistant_message]
-
-        return messages
-
-    def generate_response(self, messages: list[Message]) -> Message:
+    def generate_response(self, 
+                          messages: list[Message],
+                          system_message: str = None
+                          ) -> Message:
         """Generates a response message based on the conversation history.
 
         Args:
             messages (list[Message]): conversation containing all the history messages
+            system_message (str, optional): initiali system message content. Defaults to None.
 
         Returns:
             Message: generated response message
         """
+        if system_message is not None:
+            system_message = self.message_builder.get_system_message(system_message)
+            messages.insert(0, system_message)
+
         response = self.send_request(messages)
         content = self.process_response(response)
         message = self.message_builder.get_assistant_message(content)
@@ -67,12 +66,10 @@ class ModelServiceOpenAI(BaseModelService):
 
         if system_message is not None:
             system_message = self.message_builder.get_system_message(system_message)
-            messages = [system_message, *messages[-self.feedback_history_length:]]
-        else:
-            messages = [*messages[-self.feedback_history_length:]]
+            messages.insert(0, system_message)
 
-        message = self.generate_response(messages)
-        return message
+        feedback_message = self.generate_response(messages)
+        return feedback_message
     
 
     def send_request(self, messages: list[Message]) -> Response:

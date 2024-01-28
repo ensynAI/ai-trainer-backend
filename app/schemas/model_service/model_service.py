@@ -7,11 +7,11 @@ from schemas import Message
 class BaseModelService(ABC):
     """Base Template Model Service class"""
     @abstractmethod
-    def initialize_conversation(self, initial_message: str, system_message: str = None, rules: str = None) -> list[Message]:
+    def initialize_conversation(self, initial_message: str) -> list[Message]:
         pass
 
     @abstractmethod
-    def generate_response(self, messages: list[Message]) -> Message:
+    def generate_response(self, messages: list[Message], system_message: str = None) -> Message:
         pass
 
     @abstractmethod
