@@ -42,7 +42,7 @@ router = APIRouter(
 )
 
 
-@router.post("/initialize")
+@router.get("/initialize")
 def initialize_conversation() -> dict[str, Message]:
     # Makes a call to the database
     # Returns the initial conversation message
