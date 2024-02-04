@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter
 from schemas import Message, Conversation
 from services.chatbot import chatbot_client
@@ -22,7 +23,7 @@ Example of a good answer:
 
 feedback_system_message = """You are evaluating the messages of a customer service agent in terms of empathy and politeness.
 Rules you must follow:
-1. Only assess the messages of the customer service agent, not the client. Those are denoted by "Customer Service: ...".
+1. Only assess the messages of the customer service agent (user), not the client.
 2. Explain what was good, what was bad.
 3. If something was bad, explain how if could be potentially be improved, by returning an example response that the customer service agent could have said instead.
 4. Rate the response from 0 to 5 in terms of politeness and empathy, where 0 is super impolite, and 5 is perfectly polite and empathetic. Return the score in the format of: {"SCORE": VALUE}.
@@ -43,7 +44,7 @@ router = APIRouter(
 
 
 @router.get("/initialize")
-def initialize_conversation() -> dict[str, Message]:
+async def initialize_conversation() -> dict[str, Message]:
     # Makes a call to the database
     # Returns the initial conversation message
 
@@ -53,17 +54,25 @@ def initialize_conversation() -> dict[str, Message]:
 
 
 @router.post("/generate")
-def generate_message(messages: Conversation) -> dict[str, Message]:
-    system_message = customer_system_message
-    new_message = chatbot_client.generate_response(messages, system_message)
+async def generate_message(messages: Conversation) -> dict[str, Message]:
+    new_message = await chatbot_client.generate_response(messages, customer_system_message)
     return {"message": new_message}
 
 
 @router.post("/feedback")
-def generate_feedback(messages: Conversation) -> dict[str, Message]:
+async def generate_feedback(messages: Conversation) -> dict[str, Message]:
     # TODO:
     # system_message_content = db.get_system_prompt(user_login)
 
-    system_message = feedback_system_message
-    feedback_message = feedback_client.generate_feedback(messages, system_message)
+    feedback_message = await feedback_client.generate_feedback(messages, feedback_system_message)
     return {"feedback_message": feedback_message}
+
+
+@router.post("/generate_with_feedback")
+async def generate_message_with_feedback(messages: Conversation) -> dict[str, Message]:
+    new_message, feedback_message = await asyncio.gather(
+        chatbot_client.generate_response(messages, customer_system_message),
+        feedback_client.generate_feedback(messages, feedback_system_message)
+    )
+
+    return {"message": new_message, "feedback_message": feedback_message}
