@@ -3,7 +3,7 @@ from data_types.data_types import Role
 
 
 class Message(BaseModel):
-    role: Role = "user"
+    role: Role
     content: str
 
     def __str__(self) -> str:
@@ -11,6 +11,19 @@ class Message(BaseModel):
 
     def __repr__(self) -> str:
         return self.model_dump_json()
+
+
+class UserMessage(Message):
+    role: Role = "user"
+    feedback: str = None
+
+
+class BotMessage(Message):
+    role: Role = "assistant"
+
+
+class SystemMessage(Message):
+    role: Role = "system"
 
 
 class Conversation(BaseModel):

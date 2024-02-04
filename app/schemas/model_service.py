@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from fastapi.responses import Response
 
-from schemas import Message, Conversation
+from schemas import Message, BotMessage, Conversation
 
 
 class BaseModelService(ABC):
@@ -11,15 +11,15 @@ class BaseModelService(ABC):
         pass
 
     @abstractmethod
-    def generate_response(self, messages: Conversation, system_message: str = None) -> Message:
+    async def generate_response(self, messages: Conversation, system_message: str = None) -> BotMessage:
         pass
 
     @abstractmethod
-    def generate_feedback(self, messages: Conversation, system_message: str = None) -> Message:
+    async def generate_feedback(self, messages: Conversation, system_message: str = None) -> BotMessage:
         pass
 
     @abstractmethod
-    def send_request(self, messages: Conversation):
+    async def send_request(self, messages: Conversation):
         pass
 
     @abstractmethod
