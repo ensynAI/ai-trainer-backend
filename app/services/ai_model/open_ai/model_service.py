@@ -27,7 +27,7 @@ class ModelServiceOpenAI(BaseModelService):
         Returns:
             Message: initial conversation message
         """
-        message = self.message_builder.get_assistant_message(initial_message)
+        message = self.message_builder.get_assistant_message(content=initial_message)
         return message
 
     async def generate_response(self, 
@@ -50,7 +50,8 @@ class ModelServiceOpenAI(BaseModelService):
 
         response = await self.send_request(conversation)
         content = self.process_response(response)
-        message = self.message_builder.get_assistant_message(content)
+
+        message = self.message_builder.get_assistant_message(content=content)
         return message
 
     async def generate_feedback(self, conversation: Conversation, system_message: str = None) -> BotMessage:

@@ -1,6 +1,6 @@
 import asyncio
 from fastapi import APIRouter
-from schemas import Message, Conversation
+from schemas import BotMessage, Conversation
 from services.chatbot import chatbot_client
 from services.feedback_generation import feedback_client
 
@@ -44,23 +44,24 @@ router = APIRouter(
 
 
 @router.get("/initialize")
-async def initialize_conversation() -> dict[str, Message]:
+async def initialize_conversation() -> dict[str, Conversation]:
     # Makes a call to the database
     # Returns the initial conversation message
 
     initial_message = "Hi, the microwave I bought last week stopped working." # TODO: get this from the database based on the user_login
     message = chatbot_client.initialize_conversation(initial_message)
-    return {"message": message}
+    messages = Conversation(messages=[message])
+    return {"conversation": messages}
 
 
 @router.post("/generate")
-async def generate_message(messages: Conversation) -> dict[str, Message]:
+async def generate_message(messages: Conversation) -> dict[str, BotMessage]:
     new_message = await chatbot_client.generate_response(messages, customer_system_message)
     return {"message": new_message}
 
 
 @router.post("/feedback")
-async def generate_feedback(messages: Conversation) -> dict[str, Message]:
+async def generate_feedback(messages: Conversation) -> dict[str, BotMessage]:
     # TODO:
     # system_message_content = db.get_system_prompt(user_login)
 
@@ -69,10 +70,10 @@ async def generate_feedback(messages: Conversation) -> dict[str, Message]:
 
 
 @router.post("/generate_with_feedback")
-async def generate_message_with_feedback(messages: Conversation) -> dict[str, Message]:
+async def generate_message_with_feedback(messages: Conversation) -> dict[str, BotMessage]:
     new_message, feedback_message = await asyncio.gather(
         chatbot_client.generate_response(messages, customer_system_message),
         feedback_client.generate_feedback(messages, feedback_system_message)
     )
 
-    return {"message": new_message, "feedback_message": feedback_message}
+    return {"message": new_message, "feedback": feedback_message}

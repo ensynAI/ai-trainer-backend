@@ -27,7 +27,7 @@ class SystemMessage(Message):
 
 
 class Conversation(BaseModel):
-    messages: list[Message]
+    messages: list[Message|UserMessage]
     
     def __str__(self) -> str:
         return self.model_dump_json()
