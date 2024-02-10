@@ -1,8 +1,8 @@
-
-from openai import OpenAI
+from copy import deepcopy
+from openai import AsyncOpenAI
 from fastapi import HTTPException, Response
 
-from schemas import Message, BaseModelService
+from schemas import Message, BotMessage, Conversation, BaseModelService
 from data_types import Model, ResponseFinishReason, Role
 from .message_builder import MessageBuilderOpenAI
 
@@ -12,7 +12,7 @@ class ModelServiceOpenAI(BaseModelService):
     def __init__(self, **kwargs) -> None:
         self.model: Model = kwargs["MODEL"]
         self.feedback_history_length: int = kwargs["FEEDBACK_HISTORY_LENGTH"] if "FEEDBACK_HISTORY_LENGTH" in kwargs else 2
-        self.client = OpenAI()
+        self.client = AsyncOpenAI()
         self.message_builder = MessageBuilderOpenAI()
 
     def initialize_conversation(self, 
@@ -27,17 +27,17 @@ class ModelServiceOpenAI(BaseModelService):
         Returns:
             Message: initial conversation message
         """
-        message = self.message_builder.get_assistant_message(initial_message)
+        message = self.message_builder.get_assistant_message(content=initial_message)
         return message
 
-    def generate_response(self, 
-                          messages: list[Message],
+    async def generate_response(self, 
+                          conversation: Conversation,
                           system_message: str = None
-                          ) -> Message:
+                          ) -> BotMessage:
         """Generates a response message based on the conversation history.
 
         Args:
-            messages (list[Message]): conversation containing all the history messages
+            conversation (Conversation): conversation containing all the history messages
             system_message (str, optional): initiali system message content. Defaults to None.
 
         Returns:
@@ -45,45 +45,44 @@ class ModelServiceOpenAI(BaseModelService):
         """
         if system_message is not None:
             system_message = self.message_builder.get_system_message(system_message)
-            messages.insert(0, system_message)
+            conversation = deepcopy(conversation)
+            conversation.messages.insert(0, system_message)
 
-        response = self.send_request(messages)
+        response = await self.send_request(conversation)
         content = self.process_response(response)
-        message = self.message_builder.get_assistant_message(content)
+
+        message = self.message_builder.get_assistant_message(content=content)
         return message
 
-    def generate_feedback(self, messages: list[Message], system_message: str = None) -> Message:
+    async def generate_feedback(self, conversation: Conversation, system_message: str = None) -> BotMessage:
         """Generates a feedback message based on the conversation history.
 
         Args:
-            messages (list[Message]): conversation containing all the history messages
+            conversaion (Conversation): conversation containing all the history messages
             system_message (str, optional): initiali system message content. Defaults to None.
 
         Returns:
             Message: generated feedback message
         """
-        messages = self._process_feedback_input_messages(messages)
+        processed_messages = self._process_feedback_input_messages(conversation.messages)
+        processed_conversation = Conversation(messages=processed_messages)
 
-        if system_message is not None:
-            system_message = self.message_builder.get_system_message(system_message)
-            messages.insert(0, system_message)
-
-        feedback_message = self.generate_response(messages)
+        feedback_message = await self.generate_response(processed_conversation, system_message)
         return feedback_message
     
 
-    def send_request(self, messages: list[Message]) -> Response:
+    async def send_request(self, conversation: Conversation) -> Response:
         """Sends a request to the OpenAI API
 
         Args:
-            messages (list[Message]): conversation containing all the history messages
+            conversation (Conversation): conversation containing all the history messages
 
         Returns:
             Response: model service response with the generated message
         """
-        response = self.client.chat.completions.create(
+        response = await self.client.chat.completions.create(
             model=self.model,
-            messages=messages,
+            messages=conversation.messages,
         )
         return response
 
