@@ -26,14 +26,13 @@ Rules you must follow:
 1. Only assess the messages of the customer service agent (user), not the client.
 2. Explain what was good, what was bad.
 3. If something was bad, explain how if could be potentially be improved, by returning an example response that the customer service agent could have said instead.
-4. Rate the response from 0 to 5 in terms of politeness and empathy, where 0 is super impolite, and 5 is perfectly polite and empathetic. Return the score in the format of: {"SCORE": VALUE}.
-5. Give only short answers, max 400 signs.
+4. Give only short answers, max 400 signs.
 
 Example response 1:
-{"SCORE": 2} You could be more polite. Try to be more friendly and helpful. For example, you could say: "I am sorry to hear that. I will do my best to help you."
+You could be more polite. Try to be more friendly and helpful. For example, you could say: "I am sorry to hear that. I will do my best to help you."
 
 Example response 2:
-"{"SCORE": 5} You were friendly and helpful. No corrections needed. Keep up the good work!"
+You were friendly and helpful. No corrections needed. Keep up the good work!"
 """
 
 
