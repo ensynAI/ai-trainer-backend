@@ -22,6 +22,8 @@ RUN poetry install --no-interaction --no-ansi --only main
 COPY ./app /src/app
 WORKDIR /src/app
 
+EXPOSE 8000
+
 USER $USERNAME
 
 ENTRYPOINT [ "poetry", "run"]
