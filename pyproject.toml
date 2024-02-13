@@ -16,7 +16,7 @@ pydantic-settings = "^2.1.0"
 
 
 [tool.poetry.scripts]
-launch_app = "app.main:launch_app"
+launch_app = "main:launch_app"
 
 [build-system]
 requires = ["poetry-core"]
